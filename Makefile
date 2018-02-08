@@ -9,17 +9,19 @@ QEMU = qemu-system-x86_64
 
 CFLAGS = -g -Wall -std=gnu99 -ffreestanding
 
-all: moOS-image
+EXEC = os-image
+
+all: ${EXEC}
 
 run: all
-	${QEMU} -fda moOS-image
+	${QEMU} -fda ${EXEC}
 
-debug: moOS-image kernel.elf
-	${QEMU} -s -S -fda moOS-image &
+debug: ${EXEC} kernel.elf
+	${QEMU} -s -S -fda ${EXEC} &
 	${GDB} -ex "set architecture i386:x86_64" -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
 
-moOS-image: boot/boot_sect.bin kernel.bin
-	cat $^ > moOS-image
+${EXEC}: boot/boot_sect.bin kernel.bin
+	cat $^ > ${EXEC}
 
 kernel.bin: kernel/kernel_entry.o ${OBJ}
 	${LD} -o $@ -Ttext 0x1000 $^ --oformat binary
@@ -38,5 +40,5 @@ kernel.elf: kernel/kernel_entry.o ${OBJ}
 	nasm $< -f bin -I './boot/' -o $@
 
 clean:
-	rm -fr *.bin *.o moOS-image *.elf
-	rm -fr kernel/*.o boot/*.bin drivers/*.o
+	rm -fr *.bin *.o ${EXEC} *.elf
+	rm -fr kernel/*.o boot/*.bin 
